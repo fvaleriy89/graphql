@@ -347,6 +347,48 @@ func TestNullLiteralArguments(t *testing.T) {
 	}
 }
 
+func TestNullLiteralVariables(t *testing.T) {
+	checkForNull := func(p graphql.ResolveParams) (interface{}, error) {
+		arg, ok := p.Args["arg"]
+		if !ok || arg != nil {
+			t.Errorf("expected null for input arg, got %#v", arg)
+		}
+		return "yay", nil
+	}
+	schema, err := graphql.NewSchema(graphql.SchemaConfig{
+		Query: graphql.NewObject(graphql.ObjectConfig{
+			Name: "Query",
+			Fields: graphql.Fields{
+				"checkNullStringArg": &graphql.Field{
+					Type: graphql.String,
+					Args: graphql.FieldConfigArgument{
+						"arg": &graphql.ArgumentConfig{Type: graphql.String},
+					},
+					Resolve: checkForNull,
+				},
+			},
+		}),
+	})
+	if err != nil {
+		t.Fatalf("wrong result, unexpected errors: %v", err.Error())
+	}
+	query := `query Test($value: String = null) { checkNullStringArg(arg: $value) }`
+
+	result := graphql.Do(graphql.Params{
+		Schema:        schema,
+		RequestString: query,
+		VariableValues: map[string]interface{}{},
+	})
+	if len(result.Errors) > 0 {
+		t.Fatalf("wrong result, unexpected errors: %v", result.Errors)
+	}
+	expected := map[string]interface{}{ "checkNullStringArg": "yay", }
+	if !reflect.DeepEqual(result.Data, expected) {
+		t.Errorf("wrong result, query: %v, graphql result diff: %v", query, testutil.Diff(expected, result))
+	}
+
+}
+
 func TestErrorNullLiteralForNotNullArgument(t *testing.T) {
 	checkNotCalled := func(p graphql.ResolveParams) (interface{}, error) {
 		t.Error("shouldn't have been called")
