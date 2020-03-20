@@ -14,8 +14,10 @@ import (
 	"github.com/graphql-go/graphql/language/printer"
 )
 
-// Used to detect the difference between a "null" literal and not present
 type nullValue struct {}
+
+// Used to detect the difference between a "null" literal and not present
+var NullValue = nullValue{}
 
 // Prepares an object map of variableValues of the correct type based on the
 // provided variable definitions and arbitrary input. If the input cannot be
@@ -63,9 +65,7 @@ func getArgumentValues(
 		if tmp = valueFromAST(value, argDef.Type, variableValues); isNullish(tmp) {
 			tmp = argDef.DefaultValue
 		}
-		if _, ok := tmp.(nullValue); ok {
-			results[argDef.PrivateName] = nil
-		} else if !isNullish(tmp) {
+		if !isNullish(tmp) {
 			results[argDef.PrivateName] = tmp
 		}
 	}
@@ -138,6 +138,9 @@ func getVariableValue(schema Schema, definitionAST *ast.VariableDefinition, inpu
 func coerceValue(ttype Input, value interface{}) interface{} {
 	if isNullish(value) {
 		return nil
+	}
+	if value == NullValue {
+		return NullValue
 	}
 	switch ttype := ttype.(type) {
 	case *NonNull:
@@ -358,7 +361,7 @@ func valueFromAST(valueAST ast.Value, ttype Input, variables map[string]interfac
 		return nil
 	}
 	if valueAST.GetKind() == kinds.NullValue {
-		return nullValue{}
+		return NullValue
 	}
 	// precedence: value > type
 	if valueAST, ok := valueAST.(*ast.Variable); ok {
@@ -406,9 +409,7 @@ func valueFromAST(valueAST ast.Value, ttype Input, variables map[string]interfac
 			} else {
 				value = field.DefaultValue
 			}
-			if _, ok := value.(nullValue); ok {
-				obj[name] = nil
-			} else if !isNullish(value) {
+			if !isNullish(value) {
 				obj[name] = value
 			}
 		}
