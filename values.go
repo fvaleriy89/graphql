@@ -14,6 +14,9 @@ import (
 	"github.com/graphql-go/graphql/language/printer"
 )
 
+// Used to detect the difference between a "null" literal and not present
+type nullValue struct {}
+
 // Prepares an object map of variableValues of the correct type based on the
 // provided variable definitions and arbitrary input. If the input cannot be
 // parsed to match the variable definitions, a GraphQLError will be returned.
@@ -60,7 +63,9 @@ func getArgumentValues(
 		if tmp = valueFromAST(value, argDef.Type, variableValues); isNullish(tmp) {
 			tmp = argDef.DefaultValue
 		}
-		if !isNullish(tmp) {
+		if _, ok := tmp.(nullValue); ok {
+			results[argDef.PrivateName] = nil
+		} else if !isNullish(tmp) {
 			results[argDef.PrivateName] = tmp
 		}
 	}
@@ -352,6 +357,9 @@ func valueFromAST(valueAST ast.Value, ttype Input, variables map[string]interfac
 	if valueAST == nil {
 		return nil
 	}
+	if valueAST.GetKind() == kinds.NullValue {
+		return nullValue{}
+	}
 	// precedence: value > type
 	if valueAST, ok := valueAST.(*ast.Variable); ok {
 		if valueAST.Name == nil || variables == nil {
@@ -398,7 +406,9 @@ func valueFromAST(valueAST ast.Value, ttype Input, variables map[string]interfac
 			} else {
 				value = field.DefaultValue
 			}
-			if !isNullish(value) {
+			if _, ok := value.(nullValue); ok {
+				obj[name] = nil
+			} else if !isNullish(value) {
 				obj[name] = value
 			}
 		}
