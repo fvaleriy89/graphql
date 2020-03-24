@@ -272,7 +272,7 @@ func TestEmptyStringIsNotNull(t *testing.T) {
 func TestNullLiteralArguments(t *testing.T) {
 	checkForNull := func(p graphql.ResolveParams) (interface{}, error) {
 		arg, ok := p.Args["arg"]
-		if !ok || arg != graphql.NullValue {
+		if !ok || arg != nil {
 			t.Errorf("expected null for input arg, got %#v", arg)
 		}
 		return "yay", nil
@@ -350,7 +350,7 @@ func TestNullLiteralArguments(t *testing.T) {
 func TestNullLiteralDefaultVariableValue(t *testing.T) {
 	checkForNull := func(p graphql.ResolveParams) (interface{}, error) {
 		arg, ok := p.Args["arg"]
-		if !ok || arg != graphql.NullValue {
+		if !ok || arg != nil {
 			t.Errorf("expected null for input arg, got %#v", arg)
 		}
 		return "yay", nil
@@ -377,7 +377,7 @@ func TestNullLiteralDefaultVariableValue(t *testing.T) {
 	result := graphql.Do(graphql.Params{
 		Schema:        schema,
 		RequestString: query,
-		VariableValues: map[string]interface{}{"value2": graphql.NullValue},
+		VariableValues: map[string]interface{}{"value2": nil},
 	})
 	if len(result.Errors) > 0 {
 		t.Fatalf("wrong result, unexpected errors: %v", result.Errors)
@@ -391,7 +391,7 @@ func TestNullLiteralDefaultVariableValue(t *testing.T) {
 func TestNullLiteralVariables(t *testing.T) {
 	checkForNull := func(p graphql.ResolveParams) (interface{}, error) {
 		arg, ok := p.Args["arg"]
-		if !ok || arg != graphql.NullValue {
+		if !ok || arg != nil {
 			t.Errorf("expected null for input arg, got %#v", arg)
 		}
 		return "yay", nil
@@ -418,7 +418,7 @@ func TestNullLiteralVariables(t *testing.T) {
 	result := graphql.Do(graphql.Params{
 		Schema:        schema,
 		RequestString: query,
-		VariableValues: map[string]interface{}{"value": graphql.NullValue},
+		VariableValues: map[string]interface{}{"value": nil},
 	})
 	if len(result.Errors) > 0 {
 		t.Fatalf("wrong result, unexpected errors: %v", result.Errors)
@@ -473,7 +473,7 @@ Expected "String!", found null.`;
 func TestNullInputObjectFields(t *testing.T) {
 	checkForNull := func(p graphql.ResolveParams) (interface{}, error) {
 		arg := p.Args["arg"]
-		expectedValue := map[string]interface{}{ "field1": graphql.NullValue, "field2": graphql.NullValue, "field3": graphql.NullValue, "field4" : "abc", "field5": 42, "field6": true}
+		expectedValue := map[string]interface{}{ "field1": nil, "field2": nil, "field3": nil, "field4" : "abc", "field5": 42, "field6": true}
 		if value, ok := arg.(map[string]interface{}); !ok  {
 			t.Errorf("expected map[string]interface{} for input arg, got %#v", arg)
 		} else if !reflect.DeepEqual(expectedValue, value) {
